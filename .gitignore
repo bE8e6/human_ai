@@ -1,4 +1,15 @@
 /node_modules
+**/node_modules/
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+server/backups/
+server/runtime/
+artifacts/
+**/*.before-restore-*
+**/*.restore-*.tmp*
+**/*.deletions.ndjson*
 /oh_modules
 /local.properties
 /.idea
@@ -12,10 +23,6 @@
 **/.test
 /.appanalyzer
 /server/data/
-/server/.env
-**/.env
-**/.env.*
-!**/.env.example
 *.db
 *.db-wal
 *.db-shm

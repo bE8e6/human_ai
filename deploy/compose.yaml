@@ -1,0 +1,129 @@
+name: human-ai
+services:
+  server:
+    image: ${CHAT_IMAGE:-human-ai:2.0.0}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    environment:
+      NODE_ENV: ${SERVICE_ENV:-test}
+      HOST: 0.0.0.0
+      PORT: "8787"
+      DB_PATH: /data/chat.db
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://127.0.0.1:8787}
+      TRUSTED_PROXIES: ${PROXY_IP:-172.30.0.2}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-operator}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:?请先配置管理员密码摘要}
+      METRICS_KEY: ${METRICS_KEY:?请先生成监测密钥}
+      MAIL_API_KEY: ${MAIL_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_CODE_SECRET: ${MAIL_CODE_SECRET:-}
+    ports:
+      - "127.0.0.1:${LOCAL_PORT:-8787}:8787"
+    volumes:
+      - data:/data
+      - backups:/backups:ro
+    networks: [service]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 1
+    pids_limit: 100
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  gateway:
+    image: caddy:2.10-alpine
+    profiles: [public]
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - certificates:/data
+      - gateway_config:/config
+    networks:
+      service:
+        ipv4_address: ${PROXY_IP:-172.30.0.2}
+    depends_on:
+      server: {condition: service_healthy}
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  backup:
+    image: ${CHAT_IMAGE:-human-ai:2.0.0}
+    pull_policy: never
+    command: ["node","scripts/backup-loop.mjs"]
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    environment:
+      DB_PATH: /data/chat.db
+      BACKUP_DIR: /backups
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      ALERT_WEBHOOK: ${ALERT_WEBHOOK:-}
+    volumes: [data:/data, backups:/backups]
+    networks: [service]
+    depends_on:
+      server: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD","node","scripts/backup-health.mjs"]
+      interval: 30m
+      timeout: 10s
+      start_period: 2m
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  monitor:
+    image: ${CHAT_IMAGE:-human-ai:2.0.0}
+    pull_policy: never
+    command: ["node","scripts/monitor.mjs"]
+    restart: unless-stopped
+    init: true
+    environment:
+      MONITOR_ORIGIN: http://server:8787
+      METRICS_KEY: ${METRICS_KEY}
+      DATA_DIR: /data
+      BACKUP_DIR: /backups
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      ALERT_WEBHOOK: ${ALERT_WEBHOOK:-}
+      MIN_FREE_MB: ${MIN_FREE_MB:-512}
+      MAX_DATA_MB: ${MAX_DATA_MB:-1024}
+      MAX_RSS_MB: ${MAX_RSS_MB:-220}
+    volumes: [data:/data:ro, backups:/backups:ro]
+    networks: [service]
+    depends_on:
+      server: {condition: service_healthy}
+      backup: {condition: service_started}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    healthcheck: {disable: true}
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+networks:
+  service:
+    ipam:
+      config:
+        - subnet: ${NETWORK_SUBNET:-172.30.0.0/24}
+volumes:
+  data:
+  backups:
+  certificates:
+  gateway_config:

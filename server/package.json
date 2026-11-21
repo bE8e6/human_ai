@@ -2,6 +2,15 @@
   "name": "human-ai-server",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24" },
-  "scripts": { "start": "node index.mjs", "test": "node --test test/*.test.mjs" }
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node --test test/*.test.mjs",
+    "sync:policy": "node scripts/sync-policy.mjs"
+  },
+  "dependencies": {
+    "ws": "8.23.0"
+  }
 }

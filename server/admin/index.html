@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>人机？ · 服务管理</title>
+  <link rel="stylesheet" href="/admin/assets/app.css">
+  <script defer src="/admin/assets/app.js"></script>
+</head>
+<body>
+  <div id="login" class="login-shell">
+    <div class="login-intro"><span class="brand-mark">人机？</span><h1>照顾每一次<br>真人的回应。</h1><p>账号、举报与服务管理</p><a href="/rules">使用规则</a> · <a href="/privacy">隐私政策</a></div>
+    <form id="login-form" class="login-card">
+      <p class="eyebrow">SERVICE CONSOLE</p><h2>管理员登录</h2>
+      <p class="muted">使用独立的管理员账号。</p>
+      <label for="admin-name">管理员用户名</label><input id="admin-name" name="username" autocomplete="username" required maxlength="80">
+      <label for="admin-password">密码</label><input id="admin-password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required>
+      <button class="primary" type="submit">进入管理台</button>
+      <p id="login-error" class="error" role="alert"></p>
+    </form>
+  </div>
+  <div id="console" class="console-shell" hidden>
+    <aside class="sidebar">
+      <a class="brand-mark" href="/admin">人机？</a><p class="eyebrow">服务管理 · 第二版</p>
+      <nav aria-label="管理功能">
+        <button data-tab="reports" class="nav-item active">举报处理 <span id="pending-count" class="badge">0</span></button>
+        <button data-tab="users" class="nav-item">用户与账号</button>
+        <button data-tab="audit" class="nav-item">操作日志</button>
+      </nav>
+      <div class="sidebar-footer"><span id="operator"></span><button id="logout">退出管理台</button><a href="/privacy">隐私与保存规则</a><a href="/rules">使用规则</a></div>
+    </aside>
+    <main class="workspace">
+      <header class="page-header"><div><p class="eyebrow">HUMAN AI / OPERATIONS</p><h1 id="page-title">举报处理</h1><p id="page-description" class="muted">查看必要证据，记录每次处理的原因。</p></div><button id="refresh">刷新</button></header>
+      <section class="summary" aria-label="服务概况">
+        <div><span>当前账号</span><strong id="user-count">—</strong></div><div><span>待处理举报</span><strong id="report-count">—</strong></div><div><span>禁用账号</span><strong id="banned-count">—</strong></div>
+      </section>
+      <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+      <form id="filters" class="toolbar">
+        <label class="sr-only" for="search">查找用户</label><input id="search" type="search" placeholder="用户名、昵称或邮箱" maxlength="100" hidden>
+        <label class="sr-only" for="state">筛选状态</label><select id="state" aria-label="筛选状态"></select><button type="submit">筛选</button>
+        <span id="page-status" class="muted"></span>
+      </form>
+      <div class="content-grid">
+        <section class="records-panel" aria-label="记录列表"><div id="records"></div><div class="pagination"><button id="previous">上一页</button><span id="page-number">第 1 页</span><button id="next">下一页</button></div></section>
+        <section id="detail" class="detail-panel" aria-label="记录详情"><div class="empty"><span>选择一条记录</span><p>详情和处理操作会显示在这里。</p></div></section>
+      </div>
+      <footer>AI 身份由真人扮演 · 管理员会话最长 8 小时 · 每次处理均记录操作日志</footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../index.mjs';
 import { DatabaseSync } from 'node:sqlite';
+import { randomUUID } from 'node:crypto';
 
 async function fixture(t, options = {}) {
   const server = createApp(options);
@@ -12,6 +13,7 @@ async function fixture(t, options = {}) {
   t.after(() => server.listening ? new Promise(resolve => server.close(resolve)) : undefined);
   const base = `http://127.0.0.1:${server.address().port}`;
   async function call(path, token = '', data, expected = 200, admin = '') {
+    if (data && /^\/conversations\/\d+\/messages$/.test(path) && data.clientMessageId === undefined) data = { ...data, clientMessageId: randomUUID() };
     const response = await fetch(base + path, {
       method: data === undefined ? 'GET' : 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Admin-Key': admin },
@@ -21,7 +23,7 @@ async function fixture(t, options = {}) {
     assert.equal(response.status, expected, JSON.stringify(result));
     return result;
   }
-  async function register(username) { return call('/auth/register','',{ username,password:'test_password_123' },201); }
+  async function register(username) { return call('/auth/register','',{ username,password:'test_password_123',acceptPolicy:true,policyVersion:'2026-11-20' },201); }
   return { server, call, register };
 }
 
@@ -118,7 +120,7 @@ test('超过100条的分页不会遗漏，已读游标不可跨对话', async t 
   for (let i=0;i<105;i++) statement.run(chat,a.user.id,`历史 ${i}`,Date.now());
   const foreign = Number(statement.run(otherChat,c.user.id,'另一段对话',Date.now()).lastInsertRowid);
   seed.close();
-  const first = await call(`/conversations/${chat}/messages`,b.token);
+  const first = await call(`/conversations/${chat}/messages?after=0`,b.token);
   assert.equal(first.messages.length,100);
   assert.equal(first.hasMore,true);
   const second = await call(`/conversations/${chat}/messages?after=${first.messages[99].id}`,b.token);

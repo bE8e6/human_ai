@@ -3,6 +3,14 @@
     {
       "name": "start_window_background",
       "value": "#000000"
-    }
+    },
+    { "name": "background", "value": "#14221D" },
+    { "name": "surface", "value": "#24372E" },
+    { "name": "accent", "value": "#24765D" },
+    { "name": "inactive", "value": "#53695D" },
+    { "name": "text_primary", "value": "#EDF5EF" },
+    { "name": "text_secondary", "value": "#B0C5B7" },
+    { "name": "error", "value": "#F29C88" },
+    { "name": "bubble_self", "value": "#2A4C3B" }
   ]
 }

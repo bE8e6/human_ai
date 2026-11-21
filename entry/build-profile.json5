@@ -1,6 +1,11 @@
 {
   "apiType": "stageMode",
   "buildOption": {
+    "arkOptions": {
+      "buildProfileFields": {
+        "SERVICE_URL": ""
+      }
+    },
     "resOptions": {
       "copyCodeResource": {
         "enable": false
